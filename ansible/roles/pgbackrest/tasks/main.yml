@@ -1,0 +1,62 @@
+---
+- name: Install pgbackrest
+  yum:
+    name: pgbackrest
+    state: present
+
+- name: Copy config file to master
+  template:
+    src: master.conf.j2
+    dest: /etc/pgbackrest.conf
+    owner: postgres
+    group: postgres
+  when: ansible_facts['hostname'] == "master"
+
+- name: Copy config file to replica1
+  template:
+    src: replica1.conf.j2
+    dest: /etc/pgbackrest.conf
+    owner: postgres
+    group: postgres
+  when: ansible_facts['hostname'] == "replica1"
+
+- name: Copy config file to backup
+  template:
+    src: backup.conf.j2
+    dest: /etc/pgbackrest.conf
+    owner: postgres
+    group: postgres
+  when: ansible_facts['hostname'] == "backup"
+
+- name: Start postgresql unit on replica1
+  systemd:
+    name: postgresql-15
+    enabled: true
+    state: started
+  when: ansible_facts['hostname'] == "replica1"
+
+- name: Init and check repo
+  become_user: postgres
+  shell: |
+    pgbackrest --stanza=demo --log-level-console=info stanza-create
+    pgbackrest --stanza=demo --log-level-console=info check
+  when: ansible_facts['hostname'] == "backup"
+
+- name: Create full backup
+  become_user: postgres
+  command: pgbackrest --stanza=demo --log-level-console=info backup
+  when: ansible_facts['hostname'] == "backup"
+
+- name: Crontab pgbackrest
+  become: true
+  cron:
+    name: "{{ item.name | default('Backup') }}"
+    cron_file: /etc/cron.d/pgbackrest
+    job: "/usr/bin/pgbackrest --type={{ item.type }} --stanza={{ pgbackrest_stanza }} backup"
+    user: postgres
+    dow: "{{ item.dow }}"
+    hour: "{{ item.hour }}"
+    minute: "{{ item.minute }}"
+  ignore_errors: true
+  loop: "{{ pgbackrest_cron | flatten(1) }}"
+  when: ansible_facts['hostname'] == "backup"

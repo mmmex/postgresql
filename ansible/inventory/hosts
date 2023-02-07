@@ -1,0 +1,10 @@
+[postgres_cluster]
+master ansible_host=192.168.57.10 ansible_user=vagrant ansible_ssh_private_key_file=.vagrant/machines/master/virtualbox/private_key
+replica1 ansible_host=192.168.57.11 ansible_user=vagrant ansible_ssh_private_key_file=.vagrant/machines/replica1/virtualbox/private_key
+
+[backup_server]
+backup ansible_host=192.168.57.12 ansible_user=vagrant ansible_ssh_private_key_file=.vagrant/machines/backup/virtualbox/private_key
+
+[all:vars]
+ansible_ssh_user=vagrant
+#ansible_ssh_private_key_file=ansible/insecure_private_key

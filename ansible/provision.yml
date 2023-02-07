@@ -1,0 +1,12 @@
+---
+- name: Setup cluster postgresql-15 with backup server pgbackrest
+  become: true
+  hosts: all
+  vars_files:
+    - vars/main.yml
+  roles:
+    - role: etc_hosts
+    - role: depend
+    - role: postgres-cluster
+    - role: ssh-keys
+    - role: pgbackrest

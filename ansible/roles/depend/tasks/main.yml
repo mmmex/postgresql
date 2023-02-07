@@ -1,0 +1,55 @@
+---
+- name: Set timezone to Europe/Moscow
+  timezone:
+    name: Europe/Moscow
+
+- name: Install epel-release
+  yum:
+    name: epel-release
+    state: present
+
+- name: Install dependencies
+  yum:
+    name:
+    - python
+    - python-devel
+    - python-psycopg2
+    - python-setuptools
+    - libselinux-python
+    - libselinux-python3
+    - libsemanage-python
+    - policycoreutils-python
+    - postgresql-libs
+    state: present
+
+- name: Update all packages OS
+  yum:
+    name: '*'
+    state: latest
+    update_cache: true
+
+- name: Add repo postgresql
+  yum:
+    name: https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+    state: present
+    update_cache: true
+
+# - name: Show ansible_facts
+#   debug:
+#     var: ansible_facts
+
+- name: Install postgresql
+  yum:
+    name:
+    - postgresql15-server
+    - postgresql15-contrib
+    state: present
+  when: ansible_facts['hostname'] == "master" or ansible_facts['hostname'] == "replica1"
+
+- name: Install postgresql client
+  yum:
+    name:
+    - postgresql15
+    - libxml2
+    state: present
+  when: ansible_facts['hostname'] == "backup"

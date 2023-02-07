@@ -1,0 +1,60 @@
+---
+- name: Init database
+  command: /bin/postgresql-15-setup initdb
+  args:
+    creates: /var/lib/pgsql/15/data/postgresql.conf
+  when: ansible_facts['hostname'] == "master"
+
+- name: Copy postgresql.conf file
+  template:
+    src: postgresql.conf.j2
+    dest: /var/lib/pgsql/15/data/postgresql.conf
+    mode: 0600
+    owner: postgres
+    group: postgres
+  notify: restart pgsql
+  when: ansible_facts['hostname'] == "master"
+
+- name: Copy pg_hba.conf file
+  template:
+    src: pg_hba.conf.j2
+    dest: /var/lib/pgsql/15/data/pg_hba.conf
+    mode: 0600
+    owner: postgres
+    group: postgres
+  notify: restart pgsql
+  when: ansible_facts['hostname'] == "master"
+
+- name: Copy pgpass file
+  template:
+    src: .pgpass
+    dest: /var/lib/pgsql/.pgpass
+    mode: 0600
+    owner: postgres
+    group: postgres
+  when: ansible_facts['hostname'] == "replica1"
+
+- name: Start postgres server on master
+  systemd:
+    name: postgresql-15
+    state: started
+    enabled: yes
+  when: ansible_facts['hostname'] == "master"
+
+- name: Prepare PostgreSQL
+  postgresql_user:
+    db: postgres
+    name: rep_user
+    password: 'Otus2022!'
+    encrypted: true
+    role_attr_flags: "LOGIN,REPLICATION"
+    state: present
+  become: true
+  become_user: postgres
+  notify: restart pgsql
+  when: ansible_facts['hostname'] == "master"
+
+- name: Start pg_basebackup
+  become_user: postgres
+  command: 'pg_basebackup -R -h master -U rep_user -D /var/lib/pgsql/15/data -w'
+  when: ansible_facts['hostname'] == "replica1"

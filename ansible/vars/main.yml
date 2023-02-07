@@ -1,0 +1,11 @@
+---
+etc_hosts:
+  - "192.168.57.10 master"
+  - "192.168.57.11 replica1"
+  - "192.168.57.12 backup"
+
+ssh_key_user: postgres
+pgbackrest_stanza: "demo"
+pgbackrest_cron:
+  - { name: "Full Backup", type: "full", hour: "06", minute: "30", dow: "0" }
+  - { name: "Diff Backup", type: "diff", hour: "06", minute: "30", dow: "1-6" }
