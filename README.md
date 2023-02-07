@@ -13,7 +13,7 @@
 
 ### Запуск проекта
 
-1. Клонируем репозиторий: `git clone ...`
+1. Клонируем репозиторий: `git clone https://github.com/mmmex/postgresql.git`
 2. Выполняем вход в папку: `cd postgresql`
 3. Запускаем проект: `vagrant up`
 
